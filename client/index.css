@@ -1,0 +1,30 @@
+:root {
+  --grey-100: #dae0e6;
+  --blue-400: #24a0ed;
+}
+
+body {
+  background-color: var(--grey-100);
+}
+
+.site-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px;
+  background-color: white;
+}
+
+.site-header__logo {
+  height: 24px;
+  width: 24px;
+}
+
+.site-header__profile {
+  height: 24px;
+  width: 24px;
+}
+
+.site-main {
+  padding: 8px;
+}
