@@ -18,14 +18,26 @@ var contentTypes = map[string]string{
     ".json": "application/json; charset=utf-8",
 }
 
-func getTemplateData(r *http.Request) string {
+type TemplateData struct {
+    Data string
+    Theme string
+}
+
+func getTemplateData(r *http.Request, c *cache.Cache) TemplateData {
     p := r.URL.Path
-    if p == "/" { // home page, load /r/popular
+    d := TemplateData{ Data: "", Theme: "" }
+
+    templateData, found := c.Get(p)
+    data, ok := templateData.(string);
+
+    if found && ok {
+        d.Data = data
+    } else if p == "/" { // home page, load /r/popular
         popularURL := "https://api.reddit.com/r/popular"
     
         client := &http.Client{}
         req, err := http.NewRequest("GET", popularURL, nil)
-        req.Header.Add("User-Agent", "Mozilla/5.0 (iPhone; CPU iPhone OS 13_2_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13.0.3 Mobile/15E148 Safari/604.1")
+        req.Header.Add("User-Agent", r.Header["User-Agent"][0])
 
         resp, err := client.Do(req)
 
@@ -36,20 +48,27 @@ func getTemplateData(r *http.Request) string {
         body, err := ioutil.ReadAll(resp.Body)
         if err != nil {
             log.Fatalln(err)
-            return ""
+        } else {
+            d.Data = string(body)
+            c.Set(p, string(body), cache.DefaultExpiration)
         }
-        return string(body)
-
     }
-    return ""
+
+    t, err := r.Cookie("geddit-theme")
+
+    if err == nil {
+        d.Theme = t.Value
+    }
+
+    return d
 }
 
-func viewHandler(w http.ResponseWriter, r *http.Request) {
-    d := getTemplateData(r)
+func viewHandler(w http.ResponseWriter, r *http.Request, c *cache.Cache) {
+    d := getTemplateData(r, c)
     renderTemplate(w, d)
 }
 
-func renderTemplate(w http.ResponseWriter, d string) {
+func renderTemplate(w http.ResponseWriter, d TemplateData) {
     t := template.Must(template.ParseFiles("client/index.gohtml"))
     err := t.ExecuteTemplate(w, "index.gohtml", d)
 
@@ -104,13 +123,14 @@ func subredditHandler(w http.ResponseWriter, r *http.Request, c *cache.Cache) {
 }
 
 func main() {
-    // Create a cache with a default expiration time of 24 hours, and which
-	// purges expired items every 48 hours
-	c := cache.New(24*time.Hour, 48*time.Hour)
+	subredditCache := cache.New(24*time.Hour, 48*time.Hour)
     http.HandleFunc("/r/", func(w http.ResponseWriter, r *http.Request) {
-        subredditHandler(w, r, c)
+        subredditHandler(w, r, subredditCache)
     })
     http.HandleFunc("/public/", assetHandler)
-    http.HandleFunc("/", viewHandler)
+    viewCache := cache.New(5*time.Minute, 10*time.Minute)
+    http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+        viewHandler(w, r, viewCache)
+    })
     log.Fatal(http.ListenAndServe(":8080", nil))
 }
