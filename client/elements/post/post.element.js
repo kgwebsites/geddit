@@ -31,6 +31,8 @@ class Post extends LitElement {
       }
       .post-subreddit {
         color: var(--blue-400);
+        font-weight: bold;
+        text-decoration: none;
       }
       .post-body {
         display: flex;
@@ -116,7 +118,7 @@ class Post extends LitElement {
 
   async getAndSetSubreddit(subreddit_name_prefixed) {
     try {
-      const res = await fetch(`/${subreddit_name_prefixed}`);
+      const res = await fetch(`/about/${subreddit_name_prefixed}`);
       const { data } = await res.json();
       this.subreddit = data;
       localStorage.setItem(subreddit_name_prefixed, JSON.stringify(data));
@@ -156,8 +158,10 @@ class Post extends LitElement {
                 class="subreddit_icon"
               />`
             : html`<geddit-default-icon></geddit-default-icon>`}
-          <strong class="mx post-subreddit"
-            >${this.post.data.subreddit_name_prefixed}</strong
+          <a
+            href="/${this.post.data.subreddit_name_prefixed}"
+            class="mx post-subreddit"
+            >${this.post.data.subreddit_name_prefixed}</a
           >
           <span class="mr"> • </span>
           <span>${timeAgo(this.post?.data?.created) || ""}</span>

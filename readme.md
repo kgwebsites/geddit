@@ -11,7 +11,7 @@ Any changes to the `server.go` file will require a rebuild and launch, but any c
 
 TODO:
 
-- Subreddits other than /r/popular
+- ~~Subreddits other than /r/popular~~
 - Individual post pages with comments
 - User Auth
 - Create Post

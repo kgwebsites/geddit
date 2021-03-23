@@ -23,6 +23,20 @@ type TemplateData struct {
     Theme string
 }
 
+func fetchData(url string, userAgent string) ([]byte, error) {
+    client := &http.Client{}
+    req, err := http.NewRequest("GET", url, nil)
+    req.Header.Add("User-Agent", userAgent)
+
+    resp, err := client.Do(req)
+
+    if err != nil {
+        log.Fatalln(err)
+    }
+
+    return ioutil.ReadAll(resp.Body)
+}
+
 func getTemplateData(r *http.Request, c *cache.Cache) TemplateData {
     p := r.URL.Path
     d := TemplateData{ Data: "", Theme: "" }
@@ -32,20 +46,13 @@ func getTemplateData(r *http.Request, c *cache.Cache) TemplateData {
 
     if found && ok {
         d.Data = data
-    } else if p == "/" { // home page, load /r/popular
-        popularURL := "https://api.reddit.com/r/popular"
-    
-        client := &http.Client{}
-        req, err := http.NewRequest("GET", popularURL, nil)
-        req.Header.Add("User-Agent", r.Header["User-Agent"][0])
-
-        resp, err := client.Do(req)
-
-        if err != nil {
-            log.Fatalln(err)
+    } else {
+        url := "https://api.reddit.com" + p
+        if p == "/" { // home page, load /r/popular
+            url = "https://api.reddit.com/r/popular"
         }
-
-        body, err := ioutil.ReadAll(resp.Body)
+        body, err := fetchData(url, r.Header["User-Agent"][0])
+        
         if err != nil {
             log.Fatalln(err)
         } else {
@@ -124,13 +131,18 @@ func subredditHandler(w http.ResponseWriter, r *http.Request, c *cache.Cache) {
 
 func main() {
 	subredditCache := cache.New(24*time.Hour, 48*time.Hour)
-    http.HandleFunc("/r/", func(w http.ResponseWriter, r *http.Request) {
+    http.HandleFunc("/about/r/", func(w http.ResponseWriter, r *http.Request) {
         subredditHandler(w, r, subredditCache)
     })
     http.HandleFunc("/public/", assetHandler)
+
     viewCache := cache.New(5*time.Minute, 10*time.Minute)
+    http.HandleFunc("/r/", func(w http.ResponseWriter, r *http.Request) {
+        viewHandler(w, r, viewCache)
+    })
     http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
         viewHandler(w, r, viewCache)
     })
+
     log.Fatal(http.ListenAndServe(":8080", nil))
 }

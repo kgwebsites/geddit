@@ -6,12 +6,13 @@ import {
 import "../elements/post/post.element.js";
 import "../elements/button.element.js";
 
-class Home extends LitElement {
+class Subreddit extends LitElement {
   static get properties() {
     return {
       posts: Array,
       after: String,
       loading: Boolean,
+      context: { type: Object, reflect: true },
     };
   }
 
@@ -41,7 +42,17 @@ class Home extends LitElement {
 
   connectedCallback() {
     super.connectedCallback();
+    this.loadContext();
     this.loadInitialData();
+  }
+
+  loadContext() {
+    try {
+      const context = document.querySelector("#view-context").text;
+      this.context = JSON.parse(context);
+    } catch (e) {
+      console.error(e.message);
+    }
   }
 
   loadInitialData() {
@@ -65,7 +76,7 @@ class Home extends LitElement {
     this.loading = true;
     try {
       const res = await fetch(
-        `https://api.reddit.com/r/popular?after=${this.after}`
+        `https://api.reddit.com/r/${this.context.params?.subreddit}?after=${this.after}`
       );
       const json = await res.json();
       this.posts = [...this.posts, ...json.data.children];
@@ -95,4 +106,4 @@ class Home extends LitElement {
   }
 }
 
-customElements.define("geddit-view-home", Home);
+customElements.define("geddit-view-subreddit", Subreddit);
