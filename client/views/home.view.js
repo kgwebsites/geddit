@@ -11,6 +11,7 @@ class Home extends LitElement {
     return {
       posts: Array,
       after: String,
+      loading: Boolean,
     };
   }
 
@@ -33,6 +34,8 @@ class Home extends LitElement {
     super();
     this.posts = [];
     this.after = "";
+    this.loading = false;
+
     this.getAndSetPosts = this.getAndSetPosts.bind(this);
   }
 
@@ -53,6 +56,7 @@ class Home extends LitElement {
   }
 
   async getAndSetPosts() {
+    this.loading = true;
     try {
       const res = await fetch(
         `https://api.reddit.com/r/popular?after=${this.after}`
@@ -63,6 +67,7 @@ class Home extends LitElement {
     } catch (e) {
       console.error(e.message);
     }
+    this.loading = false;
   }
 
   render() {
@@ -75,7 +80,9 @@ class Home extends LitElement {
           )}
         </div>
         <div class="flex-center">
-          <geddit-button .onClick="${(e) => this.getAndSetPosts(e)}"
+          <geddit-button
+            .disabled="${this.loading}"
+            .onClick="${(e) => this.getAndSetPosts(e)}"
             >Load More</geddit-button
           >
         </div>`;
