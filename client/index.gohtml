@@ -46,6 +46,26 @@
       <script id="data" type="application/json">
         {{$data}}
       </script>
+      <script>
+        // Register service worker
+        if ("serviceWorker" in navigator) {
+          window.addEventListener("load", function () {
+            navigator.serviceWorker.register("/public/sw.js").then(
+              function (registration) {
+                // Registration was successful
+                console.log(
+                  "ServiceWorker registration successful with scope: ",
+                  registration.scope
+                );
+              },
+              function (err) {
+                // registration failed :(
+                console.log("ServiceWorker registration failed: ", err);
+              }
+            );
+          });
+        }
+      </script>
       <script type="module" src="/public/index.js"></script>
     </footer>
   </body>

@@ -1,5 +1,5 @@
-import routes from "./routes.js";
 import page from "//unpkg.com/page/page.mjs";
+import routes from "./routes.js";
 
 page.configure({ window });
 
