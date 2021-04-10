@@ -2,10 +2,9 @@ const CACHE_NAME = "geddit-cache-v1";
 const urlsToCache = [
   "/",
   "/index.js",
-  "/public/index.js",
-  "/public/utils/numbers.js",
+  "/static/index.js",
+  "/static/utils/numbers.js",
   "/utils/numbers.js",
-  "/public/utils/numbers.js",
 ];
 
 self.addEventListener("install", function (event) {

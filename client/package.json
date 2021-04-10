@@ -3,10 +3,15 @@
   "version": "1.0.0",
   "description": "",
   "main": "app.js",
-  "dependencies": {},
-  "devDependencies": {},
+  "dependencies": {
+    "lit-element": "^2.4.0",
+    "page": "^1.11.6"
+  },
+  "devDependencies": {
+    "esbuild": "^0.11.6"
+  },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node build.js"
   },
   "author": "",
   "license": "ISC"

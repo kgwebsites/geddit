@@ -76,7 +76,7 @@ func viewHandler(w http.ResponseWriter, r *http.Request, c *cache.Cache) {
 }
 
 func renderTemplate(w http.ResponseWriter, d TemplateData) {
-    t := template.Must(template.ParseFiles("client/index.gohtml"))
+    t := template.Must(template.ParseFiles("./index.gohtml"))
     err := t.ExecuteTemplate(w, "index.gohtml", d)
 
     if err != nil {
@@ -85,9 +85,9 @@ func renderTemplate(w http.ResponseWriter, d TemplateData) {
 }
 
 func assetHandler(w http.ResponseWriter, r *http.Request){
-    filename := r.URL.Path[len("/public/"):]
+    filename := r.URL.Path[len("/static/"):]
     fileExt := filepath.Ext(filename)
-    body, err := ioutil.ReadFile("client/" + filename)
+    body, err := ioutil.ReadFile("static/" + filename)
     if err != nil {
         fmt.Fprintf(w, "%s", err)
     }
@@ -97,14 +97,15 @@ func assetHandler(w http.ResponseWriter, r *http.Request){
 }
 
 func subredditHandler(w http.ResponseWriter, r *http.Request, c *cache.Cache) {
-    subreddit, found := c.Get(r.URL.Path)
+    subredditPath := r.URL.Path[len("/about/"):]
+    subreddit, found := c.Get(subredditPath)
 	if found {
 		w.Header().Set("Content-Type", contentTypes[".json"])
         fmt.Fprintf(w, "%s", subreddit)
         return
 	}
 
-    subredditAboutPath := "https://api.reddit.com" + r.URL.Path + "/about"
+    subredditAboutPath := "https://api.reddit.com/" + subredditPath + "/about"
     
     client := &http.Client{}
     req, err := http.NewRequest("GET", subredditAboutPath, nil)
@@ -134,10 +135,13 @@ func main() {
     http.HandleFunc("/about/r/", func(w http.ResponseWriter, r *http.Request) {
         subredditHandler(w, r, subredditCache)
     })
-    http.HandleFunc("/public/", assetHandler)
+    http.HandleFunc("/static/", assetHandler)
 
     viewCache := cache.New(5*time.Minute, 10*time.Minute)
     http.HandleFunc("/r/", func(w http.ResponseWriter, r *http.Request) {
+        viewHandler(w, r, viewCache)
+    })
+    http.HandleFunc("/post/", func(w http.ResponseWriter, r *http.Request) {
         viewHandler(w, r, viewCache)
     })
     http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
